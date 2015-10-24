@@ -12,6 +12,7 @@ package view;
 
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.Observer;
 
 import algorithms.mazeGenerators.Maze3d;
 import algorithms.mazeGenerators.Position;
@@ -21,13 +22,6 @@ import presenter.Presenter;
 
 public interface View 
 {
-	/**
-	 * Setter to the presenter data member (MVC)
-	 * 
-	 * @param presenterToCommunicate - the presenter to set
-	 */
-	public void setPresenter(Presenter presenterToCommunicate);
-	
 	/**
 	 * This function is responsible to set the command container to the view part (MVC)
 	 * 

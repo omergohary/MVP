@@ -19,7 +19,7 @@ public class Run
 		System.out.println(" (2) generate3dMaze <maze name> <dimX> <dimY> <dimZ>			");
 		System.out.println(" 			ex. generate3dMaze OmerMaze 3 3 3					");
 		System.out.println(" (3) display3dMaze <maze name>                      		    ");
-		System.out.println(" 			ex. generate3dMaze OmerMaze                    	    ");
+		System.out.println(" 			ex. display3dMaze OmerMaze                    	    ");
 		System.out.println(" (4) displayCrossSection <maze name> <dim> <index>  		    ");
 		System.out.println(" 			ex. displayCrossSection OmerMaze Y 2           	    ");
 		System.out.println(" (5) saveMaze <maze name> <outfile name>           	        	");
@@ -33,10 +33,9 @@ public class Run
 		System.out.println(" (9) solve <maze name> <algirthm> (BFS/AirDistance/Manhattan)   ");
 		System.out.println(" 			ex. solve OmerMaze BFS            				    ");
 		System.out.println(" (10) displaySolution <maze name>                               ");
-		System.out.println(" 			ex. solve OmerMaze               				  	");
+		System.out.println(" 			ex. displaySolution OmerMaze               			");
 		System.out.println(" (11) exit													    ");
 		System.out.println("****************************************************************");
-
 
 		
 		/********** View **********/
@@ -50,8 +49,9 @@ public class Run
 		/******* Presenter ********/
 		MyPresenter presenter = new MyPresenter(view, model);
 		
-		view.setPresenter(presenter);
-		model.setPresenter(presenter);
+		// add the presenter to the view and model notifications' services
+		view.addObserver(presenter);
+		model.addObserver(presenter);
 		
 		view.start();
 	}

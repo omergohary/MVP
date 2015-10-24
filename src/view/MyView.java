@@ -14,6 +14,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.HashMap;
+import java.util.Observable;
 
 import algorithms.mazeGenerators.Maze3d;
 import algorithms.mazeGenerators.Position;
@@ -22,7 +23,7 @@ import presenter.Command;
 import presenter.Presenter;
 import view.View;
 
-public class MyView implements View 
+public class MyView extends Observable implements View 
 {
 	/**
 	 * C-Tor. Allocate the hash map
@@ -66,13 +67,6 @@ public class MyView implements View
 		m_isInitialized    = true;
 	}
 	
-	@Override
-	public void setPresenter(Presenter presenterToCommunicate)
-	{
-		m_presenter = presenterToCommunicate;
-	}
-	
-
 	@Override
 	public void Print(String stringToPrint) 
 	{
@@ -129,6 +123,4 @@ public class MyView implements View
 	boolean m_isInitialized;
 	HashMap<String, Command> m_commandContainer;
 	CLI m_cli;
-	
-	Presenter m_presenter;
 }

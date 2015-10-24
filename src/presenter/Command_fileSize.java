@@ -41,7 +41,7 @@ public class Command_fileSize implements Command
 	@Override
 	public void doCommand(String args) throws IOException 
 	{				
-		m_model.printFileSize(args);
+		m_model.calculateFileSize(args);
 	}
 	
 	/************ Member **********/

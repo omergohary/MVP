@@ -18,6 +18,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.HashMap;
+import java.util.Observable;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadPoolExecutor;
 
 import algorithms.demo.Maze3dAdapter;
 import algorithms.io.MyCompressorOutputStream;
@@ -35,25 +38,23 @@ import presenter.Command;
 import presenter.Presenter;
 import model.Model;
 
-public class MyModel implements Model 
+public class MyModel extends Observable implements Model 
 {
 	/** C-Tor **/
 	public MyModel()
 	{
-		m_mazes     = new HashMap<String, Maze3d>();
-		m_solutions = new HashMap<String, Solution<Position>>();
-	}
-	
-	@Override
-	public void setPresenter(Presenter presenterToCommunicate)
-	{
-		m_presenter = presenterToCommunicate;
+		m_mazes     	= new HashMap<String, Maze3d>();
+		m_solutions 	= new HashMap<String, Solution<Position>>();
+		m_mazesSizes    = new HashMap<String, Integer>();
+		m_fileSizes     = new HashMap<String, Integer>();
 	}
 	
 	@Override	
 	public void generate3dMaze(final String mazeName, final int dimX, final int dimY, final int dimZ) throws IOException
 	{
-		  new Thread(new Runnable() 
+		 
+		
+		new Thread(new Runnable() 
 		  {
 			  @Override
 			  public void run() 
@@ -64,10 +65,10 @@ public class MyModel implements Model
 				  // save it
 				  m_mazes.put(mazeName, generatedMaze);
 				  
-				  // ask presenter to send msg out
-				  String msgToPrint = String.format("Maze: %s is ready!", mazeName);
-				  m_presenter.Print(msgToPrint);
-		      }
+				  // send a notification about finish generating to the presenter (the observer of this class)
+				  setChanged(); 
+				  notifyObservers("TheRequiredMazeIsReady " + "- " + mazeName);
+			  }
 			  
 		  }).start();
 	}
@@ -79,7 +80,10 @@ public class MyModel implements Model
 		
 		if ( mazeToReturn == null)
 		{
-			m_presenter.Print("The required maze is not exist");
+			  // send a notification about unknown maze
+			  setChanged(); 
+			  notifyObservers("TheRequiredMazeIsNotExist " + "- " + mazeName);
+			  return null;
 		}
 		
 		return mazeToReturn;
@@ -92,8 +96,10 @@ public class MyModel implements Model
 		
 		if ( mazeToCompress == null)
 		{
-			m_presenter.Print("The required maze is not exist");
-			return;
+			  // send a notification about unknown maze
+			  setChanged(); 
+			  notifyObservers("TheRequiredMazeIsNotExist " + "- " + mazeName);
+			  return;
 		}
 		
 		OutputStream out;
@@ -127,32 +133,42 @@ public class MyModel implements Model
 	}
 	
 	@Override
-	public void printMazeSize(String mazeToCheck) 
+	public void calculateMazeSize(String mazeToCheck) 
 	{
-		
 		Maze3d checkedMaze = m_mazes.get(mazeToCheck);
 		
 		if (checkedMaze == null)
 		{
-			m_presenter.Print("The required maze is not exist");
+			// send a notification about unknown maze
+			setChanged(); 
+			notifyObservers("TheRequiredMazeIsNotExist " + "- " + mazeToCheck);
 			return;
 		}
 		
 		int size = checkedMaze.getDimX() * checkedMaze.getDimY() * checkedMaze.getDimZ();
+		m_mazesSizes.put(mazeToCheck, size);
 		
-		String msgToPrint = String.format("Maze: %s ,Size %d", mazeToCheck, size);
-		
-		m_presenter.Print(msgToPrint);
+		 // send a notification about finish calculating the required maze size
+		 setChanged(); 
+		 notifyObservers("TheRequiredMazeSizeIsReady " + mazeToCheck);
 	}
-
+	
 	@Override
-	public void printFileSize(String mazeToCheck) 
+	public int getMazeSize(String mazeToCheck)
+	{
+		return m_mazesSizes.get(mazeToCheck);
+	}
+	
+	@Override
+	public void calculateFileSize(String mazeToCheck) 
 	{
 		Maze3d checkedMaze = m_mazes.get(mazeToCheck);
 		
 		if (checkedMaze == null)
 		{
-			m_presenter.Print("The required maze is not exist");
+			// send a notification about unknown maze
+			setChanged(); 
+			notifyObservers("TheRequiredMazeIsNotExist "+ "- " + mazeToCheck);
 			return;
 		}
 		
@@ -168,9 +184,12 @@ public class MyModel implements Model
 			
 			// check the len
 			File checkFile = new File("./CalculateFileSize.txt");
-			String msgToPrint = String.format("Maze: %s ,Size %d", mazeToCheck, checkFile.length());
-			m_presenter.Print(msgToPrint);
+			int fileSize = (int)checkFile.length();
+			m_fileSizes.put(mazeToCheck, fileSize);
 			
+			// send a notification about finish calculating the required maze size
+			setChanged(); 
+			notifyObservers("TheRequiredFileSizeIsReady " + mazeToCheck);			
 		} 
 		catch (Exception e) 
 		{
@@ -178,6 +197,12 @@ public class MyModel implements Model
 		}
 		
 	}	
+	
+	@Override
+	public int getFileSize(String mazeToCheck)
+	{
+		return m_fileSizes.get(mazeToCheck);
+	}
 	
 	@Override
 	public void solveMaze(final String mazeName, final String algorithm) 
@@ -192,7 +217,9 @@ public class MyModel implements Model
 				
 				if (mazeToSolve == null)
 				{
-					m_presenter.Print("The required maze is not exist");
+					// send a notification about unknown maze
+					setChanged(); 
+					notifyObservers("TheRequiredMazeIsNotExist " + "- " + mazeName);
 					return;
 				}
 				
@@ -227,8 +254,9 @@ public class MyModel implements Model
 					}
 				}
 				 
-				String msgToPrint = String.format("Solution for the maze- %s (algorithm: %s) is ready!", mazeName, algorithm);
-				m_presenter.Print(msgToPrint);
+				// send a notification about finish solving to the presenter (the observer of this class)
+				setChanged(); 
+				notifyObservers("TheSolutionIsReady "+ "- " + mazeName + " (algorithm: " + algorithm + ")");
 				
 	      }
 		  
@@ -243,18 +271,28 @@ public class MyModel implements Model
 		
 		if (solutionToPrint == null)
 		{
-			m_presenter.Print("The required solution is not exist");
+			// send a notification about unknown maze
+			setChanged(); 
+			notifyObservers("TheRequiredMazeIsNotExist " + "- " + mazeName);
 			return null;
 		}
 		
 		return solutionToPrint;
 	}
 	
-	/********************* Members **********************/
-	Presenter m_presenter;
+	/********************* Members **********************/	
+	
+	public static final int NUM_OF_THREADS = 20;
 	
 	HashMap<String, Maze3d> m_mazes;
 	
 	HashMap<String, Solution<Position>> m_solutions;
+	
+	HashMap<String, Integer> m_mazesSizes;
+	
+	HashMap<String, Integer> m_fileSizes;
+	
+    ThreadPoolExecutor executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(NUM_OF_THREADS);
+
 
 }

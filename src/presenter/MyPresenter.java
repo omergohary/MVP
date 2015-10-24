@@ -12,6 +12,7 @@ package presenter;
 
 import java.util.HashMap;
 import java.util.Hashtable;
+import java.util.Observable;
 
 import javax.activation.CommandMap;
 
@@ -66,6 +67,57 @@ public class MyPresenter implements Presenter
 		m_view.SetCommandsContainer(commandMap);
 	}
 	
+	/**
+	 * A function that handle a notification from the model and view
+	 */
+	@Override
+	public void update(Observable o, Object arg) 
+	{
+		
+		String args = arg.toString();
+		
+		if (o == (Observable)(m_view))
+		{
+			// no notifications from view for now
+		}
+		
+		else if (o == (Observable)(m_model))
+		{
+			switch(args.substring(0, args.indexOf(' ')))
+			{
+				// These cases represent notification to user
+				case("TheRequiredMazeIsReady"):
+				case("TheRequiredMazeIsNotExist"):
+				case("TheSolutionIsReady"):
+				{
+					m_view.Print(args);
+					break;
+				}
+				// a notification to the presenter to ask for maze's size
+				case("TheRequiredMazeSizeIsReady"): // must have the maze name in arg[1]
+				{
+					int sizeOfMaze = m_model.getMazeSize(args.substring(args.indexOf(' ') + 1));
+					String msgToPrint = String.format("Maze: %s, Size %d", args.substring(args.indexOf(' ') + 1), sizeOfMaze);
+					m_view.Print(msgToPrint);
+					break;
+				}
+				// a notification to the presenter to ask for file's size
+				case("TheRequiredFileSizeIsReady"): // must have the maze name in arg[1]
+				{
+					int sizeOfFile = m_model.getFileSize(args.substring(args.indexOf(' ') + 1));
+					String msgToPrint = String.format("Maze: %s, Size %d", args.substring(args.indexOf(' ') + 1), sizeOfFile);
+					m_view.Print(msgToPrint);
+					break;
+				}
+				default:
+				{
+					System.out.println("Bad type of notification from Model");
+				}
+			}
+		}
+			
+	}
+	
 	@Override
 	public void Print(String stringToPrint) 
 	{
@@ -75,5 +127,6 @@ public class MyPresenter implements Presenter
 	/*********************** Member **********************/
 	
 	View  m_view;
-	Model m_model;
+	Model  m_model;
+
 }

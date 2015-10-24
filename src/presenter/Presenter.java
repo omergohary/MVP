@@ -10,7 +10,9 @@
 
 package presenter;
 
-public interface Presenter
+import java.util.Observer;
+
+public interface Presenter extends Observer
 {
 	/**
 	 * This function gives an access to print to the outStream

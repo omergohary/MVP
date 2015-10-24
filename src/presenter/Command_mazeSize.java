@@ -42,7 +42,7 @@ public class Command_mazeSize implements Command
 	@Override
 	public void doCommand(String args) throws IOException 
 	{			
-		m_model.printMazeSize(args);
+		m_model.calculateMazeSize(args);
 	}
 	
 	/************ Member **********/
