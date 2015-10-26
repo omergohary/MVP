@@ -10,17 +10,25 @@
 
 package model;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.ObjectOutputStream;
 import java.io.OutputStream;
+import java.nio.ByteBuffer;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Observable;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.ThreadPoolExecutor;
+import java.util.zip.GZIPInputStream;
+import java.util.zip.GZIPOutputStream;
 
 import algorithms.demo.Maze3dAdapter;
 import algorithms.io.MyCompressorOutputStream;
@@ -32,6 +40,7 @@ import algorithms.mazeGenerators.SimpleMaze3dGenerator;
 import algorithms.search.AStarSearcher;
 import algorithms.search.BFS;
 import algorithms.search.Solution;
+import algorithms.search.State;
 import algorithms.search.maze3d_AirHeuristic;
 import algorithms.search.maze3d_ManhattanHeuristic;
 import presenter.Command;
@@ -47,30 +56,26 @@ public class MyModel extends Observable implements Model
 		m_solutions 	= new HashMap<String, Solution<Position>>();
 		m_mazesSizes    = new HashMap<String, Integer>();
 		m_fileSizes     = new HashMap<String, Integer>();
+		executor 		= (ThreadPoolExecutor) Executors.newFixedThreadPool(NUM_OF_THREADS);
 	}
 	
 	@Override	
-	public void generate3dMaze(final String mazeName, final int dimX, final int dimY, final int dimZ) throws IOException
+	public void generate3dMaze(final String mazeName, final int dimX, final int dimY, final int dimZ) throws IOException, InterruptedException, ExecutionException
 	{
-		 
-		
-		new Thread(new Runnable() 
-		  {
-			  @Override
-			  public void run() 
-			  {
-				  // generate the maze
-				  Maze3d generatedMaze = new SimpleMaze3dGenerator().generate(dimX, dimY, dimZ);
-				  
-				  // save it
-				  m_mazes.put(mazeName, generatedMaze);
-				  
-				  // send a notification about finish generating to the presenter (the observer of this class)
-				  setChanged(); 
-				  notifyObservers("TheRequiredMazeIsReady " + "- " + mazeName);
-			  }
-			  
-		  }).start();
+		if (m_mazes.containsKey(mazeName) == false) // caching
+		{
+			// ask thread pool to run this callback in additional thread
+			Future<Maze3d> mazeInGeneration = executor.submit(new Generate3dMazeCallable(dimX, dimY, dimZ));
+			
+			Maze3d generatedMaze = mazeInGeneration.get();
+			 
+			// save it
+			m_mazes.put(mazeName, generatedMaze);
+		}	  
+			
+			// send a notification about finish generating to the presenter (the observer of this class)
+			setChanged(); 
+			notifyObservers("TheRequiredMazeIsReady " + "- " + mazeName);
 	}
 	
 	@Override
@@ -205,63 +210,33 @@ public class MyModel extends Observable implements Model
 	}
 	
 	@Override
-	public void solveMaze(final String mazeName, final String algorithm) 
+	public void solveMaze(final String mazeName, final String algorithm) throws InterruptedException, ExecutionException 
 	{
-		
-		new Thread(new Runnable() 
+		if (m_solutions.containsKey(mazeName) == false) // caching
 		{
-			@Override
-			public void run() 
+			Maze3d mazeToSolve = m_mazes.get(mazeName);
+			
+			if (mazeToSolve == null)
 			{
-				Maze3d mazeToSolve = m_mazes.get(mazeName);
-				
-				if (mazeToSolve == null)
-				{
-					// send a notification about unknown maze
-					setChanged(); 
-					notifyObservers("TheRequiredMazeIsNotExist " + "- " + mazeName);
-					return;
-				}
-				
-				Maze3dAdapter maze3dAdapter = new Maze3dAdapter(mazeToSolve);
-										
-				switch(algorithm)
-				{
-					case("BFS"):
-					case("bfs"):
-					{
-						// save the solution
-						m_solutions.put(mazeName, new BFS<Position>().search(maze3dAdapter));
-						break;
-					}
-					
-					case("AirDistance"):
-					{
-						m_solutions.put(mazeName, new AStarSearcher<Position>(new maze3d_AirHeuristic()).search(maze3dAdapter));
-						break;
-					}
-					
-					case("Manhattan"):
-					{
-						m_solutions.put(mazeName, new AStarSearcher<Position>(new maze3d_ManhattanHeuristic()).search(maze3dAdapter));
-						break;
-					}
-					
-					default:
-					{
-						System.out.println("Bad type of algorithm!");
-						return;
-					}
-				}
-				 
-				// send a notification about finish solving to the presenter (the observer of this class)
+				// send a notification about unknown maze
 				setChanged(); 
-				notifyObservers("TheSolutionIsReady "+ "- " + mazeName + " (algorithm: " + algorithm + ")");
-				
-	      }
-		  
-	  }).start();
-		  
+				notifyObservers("TheRequiredMazeIsNotExist " + "- " + mazeName);
+				return;
+			}
+			
+			Maze3dAdapter maze3dAdapter = new Maze3dAdapter(mazeToSolve);
+			
+			// ask thread pool to run this callback in additional thread
+			Future<Solution<Position>> solutionInProcess = executor.submit(new Solve3dMazeCallable(algorithm, maze3dAdapter));
+			
+			Solution<Position> solution = solutionInProcess.get();
+									
+			m_solutions.put(mazeName, solution);
+		}
+
+		// send a notification about finish solving to the presenter (the observer of this class)
+		setChanged(); 
+		notifyObservers("TheSolutionIsReady "+ "- " + mazeName + " (algorithm: " + algorithm + ")");  
 	}
 	
 	@Override
@@ -280,9 +255,104 @@ public class MyModel extends Observable implements Model
 		return solutionToPrint;
 	}
 	
+	@Override
+	public void SaveSolutionMap(String outFileName) throws IOException 
+	{
+		// Convert map to byte array
+		StringBuffer serializeMap = new StringBuffer();
+			
+		for (int index = 0; index < m_solutions.size(); index++)
+		{
+			String mazeName = (String) m_solutions.keySet().toArray()[index];
+			Solution<Position> solution = m_solutions.get(mazeName);
+			
+			serializeMap.append(mazeName);
+			serializeMap.append("-");
+			
+			for (int positionsInSolution = 0; 
+					 positionsInSolution < solution.size();
+					 positionsInSolution ++)
+			{
+				Position newPosition = solution.getStateByIndex(positionsInSolution).getState();
+				serializeMap.append(newPosition.getX() + ",");
+		   	    serializeMap.append(newPosition.getY() + ",");
+		   	    serializeMap.append(newPosition.getZ() + " ");
+			}
+			serializeMap.append("#"); // separated between solutions
+		}
+		
+		FileOutputStream out    = new FileOutputStream(outFileName);
+	    GZIPOutputStream zipOut = new GZIPOutputStream(out);
+
+
+	    zipOut.write(String.valueOf(serializeMap).getBytes(), 0, serializeMap.length());
+	    zipOut.close();	
+	}
+	
+	@Override
+	public void LoadSolutionMap(String InZipFile) throws IOException
+	{
+		FileInputStream in = new FileInputStream(InZipFile);
+		GZIPInputStream zipIn = new GZIPInputStream(in);
+		
+		byte arr[] = new byte[MAX_COMPRESSED_MAP_LEN];
+		 
+		zipIn.read(arr);
+		String compressedSolutionsMap = new String(arr);
+		
+		int numOfSolutions = compressedSolutionsMap.length() - compressedSolutionsMap.replace("#", "").length();
+		
+		String mazeName 		 = "";
+		String positionsTogether = "";
+		int startCurrser   = compressedSolutionsMap.indexOf('-') + 1;
+		int endCurrser     = compressedSolutionsMap.indexOf(" #");
+		String solutionsBeforeHandle = compressedSolutionsMap;
+		
+		for(int solutions = 0; solutions < numOfSolutions; solutions++)
+		{
+			// parse name and position from the string
+			mazeName 		    = solutionsBeforeHandle.substring(0, compressedSolutionsMap.indexOf('-'));
+			positionsTogether   = solutionsBeforeHandle.substring(startCurrser,endCurrser);
+			
+			int numOfCoordinates = positionsTogether.length() - positionsTogether.replace(" ", "").length() + 1;   // single " " = 2 positions, therefore i add 1 to this value
+			String[] coordinates = positionsTogether.split(" ");
+			
+			Solution<Position> solutionToPush = new Solution<>();
+			
+			for (int index = 0; index < numOfCoordinates; index++)
+			{
+				String[] valuesInCoordinate = coordinates[index].split(",");
+				
+				State<Position> coordinateToPush = new State<Position>(new Position(Integer.valueOf(valuesInCoordinate[0]),
+																					Integer.valueOf(valuesInCoordinate[1]),
+																					Integer.valueOf(valuesInCoordinate[2])));
+				
+				solutionToPush.addState(coordinateToPush);
+				
+			}
+			
+			m_solutions.put(mazeName, solutionToPush);
+			
+			// update params to the next loop. Prevent this update if it is the last loop (index out of range)
+			if (solutions + 1 < numOfSolutions)
+			{
+				startCurrser          = endCurrser + 2;
+				solutionsBeforeHandle = solutionsBeforeHandle.substring(startCurrser, compressedSolutionsMap.indexOf(" #", startCurrser));
+				endCurrser 			  = solutionsBeforeHandle.indexOf(" #");
+			}
+			
+		}
+		zipIn.close();
+		
+		setChanged(); 
+		notifyObservers("LoadSolutionMapFinishSuccessfully ");
+	} 
+	
 	/********************* Members **********************/	
 	
 	public static final int NUM_OF_THREADS = 20;
+	
+	public static final int MAX_COMPRESSED_MAP_LEN = 1000;
 	
 	HashMap<String, Maze3d> m_mazes;
 	
@@ -292,7 +362,6 @@ public class MyModel extends Observable implements Model
 	
 	HashMap<String, Integer> m_fileSizes;
 	
-    ThreadPoolExecutor executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(NUM_OF_THREADS);
-
+    ThreadPoolExecutor executor;
 
 }

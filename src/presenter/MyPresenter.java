@@ -46,6 +46,8 @@ public class MyPresenter implements Presenter
 		Command_fileSize fileSize                       = new Command_fileSize(m_model, m_view);
 		Command_solve solve                             = new Command_solve(m_model);
 		Command_displaySolution displaySolution         = new Command_displaySolution(m_model, m_view);
+		Command_saveSolutionMap saveSolutionMap         = new Command_saveSolutionMap(m_model);
+		Command_loadSolutionMap loadSolutionMap         = new Command_loadSolutionMap(m_model, m_view);
 		Command_exit exit                               = new Command_exit(m_model, m_view);
 		
 		/* Allocate the hash map and push all commands and strings */
@@ -61,6 +63,8 @@ public class MyPresenter implements Presenter
 		commandMap.put("fileSize", fileSize);
 		commandMap.put("solve", solve);
 		commandMap.put("displaySolution", displaySolution);
+		commandMap.put("saveSolutionMap", saveSolutionMap);
+		commandMap.put("loadSolutionMap", loadSolutionMap);
 		commandMap.put("exit", exit);
 		
 		// send to the view the hash-map
@@ -86,6 +90,7 @@ public class MyPresenter implements Presenter
 			switch(args.substring(0, args.indexOf(' ')))
 			{
 				// These cases represent notification to user
+			    case("LoadSolutionMapFinishSuccessfully"):
 				case("TheRequiredMazeIsReady"):
 				case("TheRequiredMazeIsNotExist"):
 				case("TheSolutionIsReady"):

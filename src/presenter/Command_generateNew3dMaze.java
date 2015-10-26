@@ -13,6 +13,7 @@ package presenter;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.concurrent.ExecutionException;
 
 import model.Model;
 
@@ -36,9 +37,12 @@ public class Command_generateNew3dMaze implements Command
 		   	  args[1] = dimX
 		   	  args[2] = dimY
 		   	  args[3] = dimZ
+	 * @throws ExecutionException 
+	 * @throws InterruptedException 
+	 * @throws NumberFormatException 
 	 */
 	@Override
-	public void doCommand(String args) throws IOException 
+	public void doCommand(String args) throws IOException, NumberFormatException, InterruptedException, ExecutionException 
 	{
 		 String[] arr = args.split(" ", 4);		
 		

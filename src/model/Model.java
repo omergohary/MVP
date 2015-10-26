@@ -13,6 +13,7 @@ package model;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Observer;
+import java.util.concurrent.ExecutionException;
 
 import algorithms.mazeGenerators.Maze3d;
 import algorithms.mazeGenerators.Position;
@@ -28,8 +29,10 @@ public interface Model
 	 * @param dimY		   - dimension Y
 	 * @param dimZ		   - dimension Z
 	 * @throws IOException
+	 * @throws ExecutionException 
+	 * @throws InterruptedException 
 	 */
-	public void generate3dMaze(String mazeName, int dimX, int dimY, int dimZ) throws IOException;
+	public void generate3dMaze(String mazeName, int dimX, int dimY, int dimZ) throws IOException, InterruptedException, ExecutionException;
 	
 	/**
 	 * This function is responsible to return a 3d maze according to its name
@@ -92,8 +95,10 @@ public interface Model
 	 * This function is responsible to solve specific maze with specific algorithm
 	 * @param mazeName  - the required maze
 	 * @param algorithm - the algorithm
+	 * @throws ExecutionException 
+	 * @throws InterruptedException 
 	 */
-	public void solveMaze(String mazeName, String algorithm);
+	public void solveMaze(String mazeName, String algorithm) throws InterruptedException, ExecutionException;
 	
 	/**
 	 * This function is responsible to get the solution of specific maze
@@ -101,4 +106,19 @@ public interface Model
 	 * @return - the solution instance
 	 */
 	public Solution<Position> getSolution(String mazeName);
+	
+	/**
+	 * This function is responsible to save the solution map (to the next time the project will run)
+	 * @param outFileName - the name of the zip file that the map will be saved there
+	 * @throws IOException 
+	 */
+	public void SaveSolutionMap(String outFileName) throws IOException;
+
+	/**
+	 * This function is responsible to load the solution map (zip file)
+	 * @param InZipFile - the name of the compressed zip map
+	 * @throws FileNotFoundException 
+	 * @throws IOException 
+	 */
+	void LoadSolutionMap(String InZipFile) throws FileNotFoundException, IOException;
 }

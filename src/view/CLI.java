@@ -14,6 +14,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.HashMap;
+import java.util.concurrent.ExecutionException;
 
 import presenter.Command;
 
@@ -83,7 +84,7 @@ public class CLI
 					  }
 				  } 
 				  
-				  catch (IOException e) 
+				  catch (IOException | NumberFormatException | InterruptedException | ExecutionException e) 
 				  {
 					  e.printStackTrace();
 				  }

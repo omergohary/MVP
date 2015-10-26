@@ -34,9 +34,13 @@ public class Run
 		System.out.println(" 			ex. solve OmerMaze BFS            				    ");
 		System.out.println(" (10) displaySolution <maze name>                               ");
 		System.out.println(" 			ex. displaySolution OmerMaze               			");
-		System.out.println(" (11) exit													    ");
+		System.out.println(" (11) saveSolutionMap <outFile name>                            ");
+		System.out.println(" 			ex. saveSolutionMap SolutionsMap.zip           		");
+		System.out.println(" (12) loadSolutionMap <inFile name>                             ");
+		System.out.println(" 			ex. loadSolutionMap SolutionsMap.zip           		");
+		System.out.println(" (13) exit													    ");
 		System.out.println("****************************************************************");
-
+		
 		
 		/********** View **********/
 		BufferedReader inFile = new BufferedReader(new InputStreamReader(System.in));

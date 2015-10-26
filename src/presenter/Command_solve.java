@@ -13,6 +13,7 @@ package presenter;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.concurrent.ExecutionException;
 
 import algorithms.mazeGenerators.Maze3d;
 import model.Model;
@@ -36,9 +37,12 @@ public class Command_solve implements Command
 	 * This function calls the model to solve the maze
 	 * @param args[0] = mazeName  
 	 * 	  	  argv[1] = algorithm  - BFS / AirDistance / Manhattan
+	 * 
+	 * @throws ExecutionException 
+	 * @throws InterruptedException 
 	 */
 	@Override
-	public void doCommand(String args) throws IOException 
+	public void doCommand(String args) throws IOException, InterruptedException, ExecutionException 
 	{		
 		String[] arr = args.split(" ", 2);
 		
