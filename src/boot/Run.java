@@ -4,13 +4,22 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
+
+import presenter.MazeProperties;
 import presenter.MyPresenter;
 import model.MyModel;
 import view.MyView;
 
 public class Run 
 {
-
+	// Make new config file
+	public static void main_(String[] args) throws IOException
+	{
+		MazeProperties.getInstance().setConfigToFile(20, "BFS", "SimpleGeneration");
+		System.out.println("Writing new XML succeeded");
+	}
+	
+	// Run project with CLI
 	public static void main(String[] args) throws IOException 
 	{
 		System.out.println("****************************************************************");
@@ -41,6 +50,8 @@ public class Run
 		System.out.println(" (13) exit													    ");
 		System.out.println("****************************************************************");
 		
+		// Get configuration parameters
+		MazeProperties.getInstance().loadConfigFile();
 		
 		/********** View **********/
 		BufferedReader inFile = new BufferedReader(new InputStreamReader(System.in));
@@ -56,6 +67,7 @@ public class Run
 		// add the presenter to the view and model notifications' services
 		view.addObserver(presenter);
 		model.addObserver(presenter);
+				
 		
 		view.start();
 	}

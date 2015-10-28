@@ -44,6 +44,7 @@ import algorithms.search.State;
 import algorithms.search.maze3d_AirHeuristic;
 import algorithms.search.maze3d_ManhattanHeuristic;
 import presenter.Command;
+import presenter.MazeProperties;
 import presenter.Presenter;
 import model.Model;
 
@@ -350,7 +351,7 @@ public class MyModel extends Observable implements Model
 	
 	/********************* Members **********************/	
 	
-	public static final int NUM_OF_THREADS = 20;
+	public static final int NUM_OF_THREADS = MazeProperties.getInstance().GetNumOfThreads();
 	
 	public static final int MAX_COMPRESSED_MAP_LEN = 1000;
 	
