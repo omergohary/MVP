@@ -5,22 +5,50 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 
+import GUI.MazeWindow;
+import GUI.MyView_GUI;
 import presenter.MazeProperties;
 import presenter.MyPresenter;
 import model.MyModel;
 import view.MyView;
+import view.View;
+
 
 public class Run 
 {
-	// Make new config file
-	public static void main_(String[] args) throws IOException
+
+	public static void main(String[] args) throws IOException
 	{
-		MazeProperties.getInstance().setConfigToFile(20, "BFS", "SimpleGeneration");
-		System.out.println("Writing new XML succeeded");
+		// Get configuration parameters
+		MazeProperties properties = MazeProperties.getInstance();
+		properties.loadConfigFile();
+		
+		// check which view the user asked for
+		switch (properties.getCLIorGUI())
+		{
+			case("CLI"):
+			{
+				main_CLI();
+				break;
+			}
+			
+			case("GUI"):
+			{
+				main_GUI();
+				break;
+			}
+			
+			default:
+			{
+				System.out.println("Bad type of view - please change to CLI or GUI only");
+			}
+		}
+		
+
 	}
 	
 	// Run project with CLI
-	public static void main(String[] args) throws IOException 
+	private static void main_CLI() throws IOException 
 	{
 		System.out.println("****************************************************************");
 		System.out.println(" (1) dir														");
@@ -50,26 +78,47 @@ public class Run
 		System.out.println(" (13) exit													    ");
 		System.out.println("****************************************************************");
 		
-		// Get configuration parameters
-		MazeProperties.getInstance().loadConfigFile();
-		
-		/********** View **********/
+		/********** View *********/
 		BufferedReader inFile = new BufferedReader(new InputStreamReader(System.in));
-	    PrintWriter outFile   = new PrintWriter(System.out, true);
-		MyView view   	  	  = new MyView(inFile, outFile);
-		
+		PrintWriter outFile   = new PrintWriter(System.out, true);
+		MyView view 		  = new MyView(inFile, outFile);
+	
 		/********** Model *********/
-		MyModel model 		 = new MyModel();
+		MyModel model 	 = new MyModel();
 		
 		/******* Presenter ********/
 		MyPresenter presenter = new MyPresenter(view, model);
 		
-		// add the presenter to the view and model notifications' services
+		// add the presenter to the model notifications' services
 		view.addObserver(presenter);
 		model.addObserver(presenter);
 				
+		view.start();
+	}	private static void main_GUI() 
+	{		
+		/********** View *********/
+		MyView_GUI view = new MyView_GUI();
+		
+		/********** Model *********/
+		MyModel model 	 = new MyModel();
+		
+		/******* Presenter ********/
+		MyPresenter presenter = new MyPresenter(view, model);
+		
+		// add the presenter to the model notifications' services
+		view.addObserver(presenter);
+		model.addObserver(presenter);
 		
 		view.start();
+		
 	}
-
+	
+	// Make new config file
+	public static void _main(String[] args) throws IOException
+	{
+		MazeProperties.getInstance().setConfigToFile(20, "BFS", "SimpleGeneration", "GUI");
+		System.out.println("Writing new XML succeeded");
+	}
+	
 }
+

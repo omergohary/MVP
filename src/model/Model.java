@@ -20,7 +20,7 @@ import algorithms.mazeGenerators.Position;
 import algorithms.search.Solution;
 import presenter.Presenter;
 
-public interface Model
+public interface Model 
 {
 	/**
 	 * This function is responsible on generating 3d maze

@@ -36,7 +36,21 @@ public class MazeProperties implements Serializable
     {
     	return m_numOfThreads;
     }
-    
+    public String getSearchAlgorithm() 
+    {
+		return m_searchAlgorithm;
+	}
+
+	public String getGererationAlgorithm() 
+	{
+		return m_gererationAlgorithm;
+	}
+
+	public String getCLIorGUI() 
+	{
+		return m_CLIorGUI;
+	}
+	
     public void loadConfigFile() throws IOException
     {
         Properties prop = new Properties();
@@ -50,6 +64,7 @@ public class MazeProperties implements Serializable
         m_numOfThreads 			= Integer.valueOf(prop.getProperty("NumOfThreads"));
         m_gererationAlgorithm   = prop.getProperty("GenerationAlgorithm");
         m_searchAlgorithm       = prop.getProperty("SearchAlgorithm");
+        m_CLIorGUI              = prop.getProperty("CLIorGUI");
     }
     
     /**
@@ -58,7 +73,7 @@ public class MazeProperties implements Serializable
      */
     public void setConfigToFile() throws IOException
     {
-    	setConfigToFile(20, "BFS", "SimpleGeneration");
+    	setConfigToFile(20, "BFS", "SimpleGeneration", "GUI");
     }
 
     /**
@@ -69,16 +84,18 @@ public class MazeProperties implements Serializable
      * @param generationAlgorithm - the default generation algorithm to use
      * @throws IOException
      */
-    public void setConfigToFile(int numOfThreads, String searchAlgorithm, String generationAlgorithm) throws IOException
+    public void setConfigToFile(int numOfThreads, String searchAlgorithm, String generationAlgorithm, String CLIorGui) throws IOException
     {
     	m_numOfThreads			= numOfThreads;
     	m_searchAlgorithm 		= searchAlgorithm;
     	m_gererationAlgorithm 	= generationAlgorithm;
+    	m_CLIorGUI              = CLIorGui;
     	
         Properties prop = new Properties();
         prop.setProperty("NumOfThreads", 		String.valueOf(m_numOfThreads));
         prop.setProperty("SearchAlgorithm", 	m_searchAlgorithm);
         prop.setProperty("GenerationAlgorithm", m_gererationAlgorithm);
+        prop.setProperty("CLIorGUI", m_CLIorGUI);
 
         FileOutputStream fos = new FileOutputStream(ConfigFileName);
         
@@ -93,12 +110,14 @@ public class MazeProperties implements Serializable
 
 	/******** Config Params ********/
 	
-	public int m_numOfThreads;
-	public String m_searchAlgorithm;
-	String m_gererationAlgorithm;
+	private int m_numOfThreads;
+	private String m_searchAlgorithm;
+	private String m_gererationAlgorithm;
+	private String m_CLIorGUI;
 	
 	/*********** Consts ************/
     private static final long serialVersionUID = 1L;
-    public static final String ConfigFileName = "properties.xml";
+    
+    private static final String ConfigFileName = "properties.xml";
 
 }

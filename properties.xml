@@ -3,6 +3,7 @@
 <properties>
 <comment>MazeConfiguration</comment>
 <entry key="GenerationAlgorithm">SimpleGeneration</entry>
+<entry key="CLIorGUI">GUI</entry>
 <entry key="SearchAlgorithm">BFS</entry>
 <entry key="NumOfThreads">20</entry>
 </properties>
